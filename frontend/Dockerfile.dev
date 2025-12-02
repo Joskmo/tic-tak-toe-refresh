@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies
+RUN npm install --legacy-peer-deps
+
+# Copy source
+COPY . .
+
+# Expose port for dev server
+EXPOSE 3000
+
+# Set Node options for OpenSSL compatibility
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
+# Start development server
+CMD ["npm", "start"]
+

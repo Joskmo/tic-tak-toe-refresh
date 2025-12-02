@@ -1,0 +1,44 @@
+# Docker Compose для локальной разработки
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: vanishing_ttt_backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    networks:
+      - game_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: vanishing_ttt_frontend
+    ports:
+      - "3001:3000"
+    environment:
+      # - CHOKIDAR_USEPOLLING=true # Раскомментировать если не работает hot-reload (вызывает высокую нагрузку CPU)
+      - WDS_SOCKET_PORT=3001
+      - WATCHPACK_POLLING=true # Менее агрессивный поллинг чем CHOKIDAR
+      - WATCHPACK_POLLING_INTERVAL=1000 # Проверка раз в секунду вместо непрерывной
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - game_network
+    stdin_open: true
+    tty: true
+
+networks:
+  game_network:
+    driver: bridge
+

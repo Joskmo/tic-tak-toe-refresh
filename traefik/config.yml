@@ -1,0 +1,36 @@
+# Traefik dynamic configuration
+
+http:
+  middlewares:
+    # Security headers
+    secHeaders:
+      headers:
+        frameDeny: true
+        browserXssFilter: true
+        contentTypeNosniff: true
+        forceSTSHeader: true
+        stsIncludeSubdomains: true
+        stsPreload: true
+        stsSeconds: 31536000
+        customFrameOptionsValue: SAMEORIGIN
+
+    # Rate limiting
+    rateLimit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    # Compression
+    compress:
+      compress: {}
+
+  routers:
+    # Default catch-all router
+    https-catchall:
+      entryPoints:
+        - https
+      rule: HostRegexp(`{host:.+}`)
+      priority: 1
+      tls:
+        certResolver: letsencrypt
+
