@@ -9,6 +9,9 @@ COPY package.json package-lock.json* ./
 # Install dependencies
 RUN npm install --legacy-peer-deps
 
+# Fix for OpenSSL error with Node 17+
+ENV NODE_OPTIONS=--openssl-legacy-provider
+
 # Copy source code
 COPY . .
 
