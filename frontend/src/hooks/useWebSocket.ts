@@ -27,9 +27,13 @@ export const useWebSocket = (playerId: string, options: UseWebSocketOptions = {}
 
   const getWebSocketUrl = useCallback(() => {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    // Use current host but change port to 8000 for backend
     const hostname = window.location.hostname;
-    const host = `${hostname}:8000`;
+    
+    // In development (localhost), backend is on port 8000
+    // In production (domain), backend is proxied via Traefik on standard port
+    const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
+    const host = isDevelopment ? `${hostname}:8000` : hostname;
+    
     return `${protocol}//${host}/ws/${playerId}`;
   }, [playerId]);
 
