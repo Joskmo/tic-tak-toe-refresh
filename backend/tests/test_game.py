@@ -76,39 +76,39 @@ class TestGame:
         game.add_player("player1")
         game.add_player("player2")
         
-        # Player 1 makes 3 moves
+        # Player 1 makes moves (avoiding winning patterns)
         game.make_move(0, 0, "player1")  # X at [0,0]
-        game.make_move(0, 1, "player2")  # O at [0,1]
-        game.make_move(1, 0, "player1")  # X at [1,0]
-        game.make_move(1, 1, "player2")  # O at [1,1]
-        game.make_move(2, 0, "player1")  # X at [2,0]
+        game.make_move(1, 1, "player2")  # O at [1,1] (center)
+        game.make_move(0, 2, "player1")  # X at [0,2]
+        game.make_move(2, 0, "player2")  # O at [2,0]
+        game.make_move(2, 2, "player1")  # X at [2,2]
         
-        # All 3 X's should be on board
+        # All 3 X's should be on board (diagonal pattern, no win yet)
         assert game.board[0][0] == CellValue.X
-        assert game.board[1][0] == CellValue.X
-        assert game.board[2][0] == CellValue.X
+        assert game.board[0][2] == CellValue.X
+        assert game.board[2][2] == CellValue.X
         
         # Player 2 makes 3rd move
-        game.make_move(2, 1, "player2")  # O at [2,1]
+        game.make_move(0, 1, "player2")  # O at [0,1]
         
         # All 3 O's should be on board
-        assert game.board[0][1] == CellValue.O
         assert game.board[1][1] == CellValue.O
-        assert game.board[2][1] == CellValue.O
+        assert game.board[2][0] == CellValue.O
+        assert game.board[0][1] == CellValue.O
         
         # Player 1 makes 4th move - [0,0] should vanish
-        game.make_move(0, 2, "player1")  # X at [0,2] - [0,0] vanishes
+        game.make_move(1, 0, "player1")  # X at [1,0] - [0,0] vanishes
         
         # Check that [0,0] vanished but other X's remain
         assert game.board[0][0] == CellValue.EMPTY  # Vanished!
-        assert game.board[1][0] == CellValue.X
-        assert game.board[2][0] == CellValue.X
         assert game.board[0][2] == CellValue.X
+        assert game.board[2][2] == CellValue.X
+        assert game.board[1][0] == CellValue.X
         
         # All O's should still be there
-        assert game.board[0][1] == CellValue.O
         assert game.board[1][1] == CellValue.O
-        assert game.board[2][1] == CellValue.O
+        assert game.board[2][0] == CellValue.O
+        assert game.board[0][1] == CellValue.O
 
     def test_win_condition_row(self):
         """Test win condition - three in a row"""

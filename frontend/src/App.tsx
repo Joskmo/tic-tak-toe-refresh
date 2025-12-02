@@ -25,6 +25,7 @@ const App: React.FC = () => {
   const [isWaiting, setIsWaiting] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<string>('connecting');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isPendingMove, setIsPendingMove] = useState(false);
 
   const handleMessage = useCallback((message: WebSocketMessage) => {
     console.log('Handling message:', message);
@@ -43,19 +44,23 @@ const App: React.FC = () => {
       case 'game_start':
         setIsWaiting(false);
         setGame(message.game);
+        setIsPendingMove(false);
         break;
 
       case 'game_update':
         setGame(message.game);
+        setIsPendingMove(false);
         break;
 
       case 'game_over':
         setGame(message.game);
+        setIsPendingMove(false);
         break;
 
       case 'player_left':
       case 'player_disconnected':
         setErrorMessage('Противник покинул игру');
+        setIsPendingMove(false);
         setTimeout(() => {
           setGame(null);
           setIsWaiting(false);
@@ -64,6 +69,7 @@ const App: React.FC = () => {
 
       case 'error':
         setErrorMessage(message.message);
+        setIsPendingMove(false);
         setTimeout(() => setErrorMessage(null), 3000);
         break;
 
@@ -86,16 +92,23 @@ const App: React.FC = () => {
   }, [isConnected, sendMessage]);
 
   const handleCellClick = useCallback((row: number, col: number) => {
-    if (!game || game.current_turn !== playerId) {
+    // Блокируем повторные ходы пока ждём ответ от сервера
+    if (!game || game.current_turn !== playerId || isPendingMove) {
       return;
     }
 
+    // Проверяем что ячейка пустая (защита от race condition)
+    if (game.board[row][col] !== "") {
+      return;
+    }
+
+    setIsPendingMove(true);
     sendMessage({
       type: 'make_move',
       row,
       col,
     });
-  }, [game, playerId, sendMessage]);
+  }, [game, playerId, sendMessage, isPendingMove]);
 
   const handleNewGame = useCallback(() => {
     // First, leave the current game on backend
@@ -107,6 +120,7 @@ const App: React.FC = () => {
     setGame(null);
     setIsWaiting(false);
     setErrorMessage(null);
+    setIsPendingMove(false);
   }, [game, sendMessage]);
 
   // Connection status display
@@ -167,11 +181,12 @@ const App: React.FC = () => {
                 <Board
                   board={game.board}
                   onCellClick={handleCellClick}
-                  isMyTurn={isMyTurn}
+                  isMyTurn={isMyTurn && !isPendingMove}
                   isActive={game.state === 'playing'}
                   vanishingPosition={
                     game.next_vanishing?.[playerId] || null
                   }
+                  isPending={isPendingMove}
                 />
 
                 {game.state === 'finished' && (

@@ -24,7 +24,7 @@ jobs:
     - name: Install dependencies
       working-directory: ./backend
       run: |
-        uv sync
+        uv sync --extra dev
     
     - name: Run tests
       working-directory: ./backend

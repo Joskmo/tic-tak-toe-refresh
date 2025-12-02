@@ -11,25 +11,27 @@ interface BoardProps {
   isMyTurn: boolean;
   vanishingPosition?: { row: number; col: number } | null;
   isActive: boolean;
+  isPending?: boolean;
 }
 
-const Board: React.FC<BoardProps> = ({ board, onCellClick, isMyTurn, vanishingPosition, isActive }) => {
+const Board: React.FC<BoardProps> = ({ board, onCellClick, isMyTurn, vanishingPosition, isActive, isPending = false }) => {
   const isVanishing = (rowIndex: number, colIndex: number) => {
     return vanishingPosition?.row === rowIndex && vanishingPosition?.col === colIndex;
   };
 
   return (
-    <div className={`board ${!isActive ? 'inactive' : ''}`}>
+    <div className={`board ${!isActive ? 'inactive' : ''} ${isPending ? 'pending' : ''}`}>
       {board.map((row, rowIndex) => (
         <div key={rowIndex} className="board-row">
           {row.map((cell, colIndex) => {
             const willVanish = isVanishing(rowIndex, colIndex);
+            const isDisabled = !isActive || !isMyTurn || cell !== "" || isPending;
             return (
               <button
                 key={`${rowIndex}-${colIndex}`}
-                className={`cell ${cell ? 'filled' : ''} ${isMyTurn && isActive ? 'clickable' : ''} ${willVanish ? 'vanishing' : ''}`}
-                onClick={() => isActive && onCellClick(rowIndex, colIndex)}
-                disabled={!isActive || !isMyTurn || cell !== ""}
+                className={`cell ${cell ? 'filled' : ''} ${isMyTurn && isActive && !isPending ? 'clickable' : ''} ${willVanish ? 'vanishing' : ''}`}
+                onClick={() => isActive && !isPending && onCellClick(rowIndex, colIndex)}
+                disabled={isDisabled}
                 title={willVanish ? 'Эта клетка исчезнет после вашего следующего хода' : ''}
               >
                 {cell && <span className={`symbol ${cell}`}>{cell}</span>}
