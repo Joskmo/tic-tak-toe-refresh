@@ -1,24 +1,5 @@
 services:
   # ===========================================
-  # TRAEFIK - Reverse Proxy + SSL
-  # ===========================================
-  traefik:
-    image: traefik:v3.5
-    container_name: traefik
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-    environment:
-      - ACME_EMAIL=${ACME_EMAIL}
-    volumes:
-      - ./traefik/traefik.yml:/etc/traefik/traefik.yml:ro
-      - ./traefik/letsencrypt:/letsencrypt # Volume for certificates
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    networks:
-      - web
-
-  # ===========================================
   # BACKEND API
   # ===========================================
   backend:
@@ -33,20 +14,11 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      # Router for HTTP (Redirect to HTTPS)
-      - "traefik.http.routers.backend.entrypoints=web"
+      # Router for HTTP (Redirect to HTTPS handled by global Traefik)
       - "traefik.http.routers.backend.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`))"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.backend.middlewares=https-redirect"
-      
-      # Router for HTTPS
-      - "traefik.http.routers.backend-secure.entrypoints=websecure"
-      - "traefik.http.routers.backend-secure.rule=Host(`${DOMAIN}`) && (PathPrefix(`/api`) || PathPrefix(`/ws`))"
-      - "traefik.http.routers.backend-secure.tls=true"
-      - "traefik.http.routers.backend-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.backend-secure.service=backend"
-      
-      # Service definition
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.backend.service=backend"
       - "traefik.http.services.backend.loadbalancer.server.port=8000"
 
   # ===========================================
@@ -64,23 +36,12 @@ services:
       - web
     labels:
       - "traefik.enable=true"
-      # Router for HTTP (Redirect to HTTPS)
-      - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.routers.frontend.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
-      - "traefik.http.routers.frontend.middlewares=https-redirect"
-      
-      # Router for HTTPS
-      - "traefik.http.routers.frontend-secure.entrypoints=websecure"
-      - "traefik.http.routers.frontend-secure.rule=Host(`${DOMAIN}`)"
-      - "traefik.http.routers.frontend-secure.tls=true"
-      - "traefik.http.routers.frontend-secure.tls.certresolver=letsencrypt"
-      - "traefik.http.routers.frontend-secure.service=frontend"
-      
-      # Service definition
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.frontend.service=frontend"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
 
 networks:
   web:
-    name: web
-    driver: bridge
+    external: true
