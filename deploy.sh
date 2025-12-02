@@ -38,11 +38,11 @@ fi
 
 # Остановка старых контейнеров
 echo "⏹️  Остановка старых контейнеров..."
-docker-compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
+docker compose -f docker-compose.prod.yml down --remove-orphans 2>/dev/null || true
 
 # Сборка и запуск
 echo "🔨 Сборка и запуск..."
-docker-compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml up -d --build
 
 echo "⏳ Ожидание запуска..."
 sleep 5
