@@ -1,3 +1,0 @@
-# This file ensures the traefik directory is tracked by git
-# acme.json will be created automatically during deployment
-
