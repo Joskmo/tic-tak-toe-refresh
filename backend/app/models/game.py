@@ -157,18 +157,20 @@ class Game:
         Apply vanishing rule: each player can have max 3 symbols on board
         When 4th symbol is placed, the oldest one vanishes
         """
-        # Count current symbols of this player on the board
-        player_moves_on_board = [
+        # Get all moves by this player
+        player_moves = [
             move for move in self.moves
-            if move.player_id == player_id and 
-            self.board[move.row][move.col] == symbol
+            if move.player_id == player_id
         ]
         
         # If player has more than 3 symbols, remove the oldest one
-        if len(player_moves_on_board) > 3:
-            oldest_move = player_moves_on_board[0]
-            self.board[oldest_move.row][oldest_move.col] = CellValue.EMPTY
-            print(f"🔄 Vanishing: {symbol.value} at [{oldest_move.row}, {oldest_move.col}]")
+        if len(player_moves) > 3:
+            # The move to vanish is the one that was made 3 moves before the current one
+            # e.g. if moves are [1, 2, 3, 4], we want to vanish 1. 
+            # 1 is at index -4.
+            move_to_vanish = player_moves[-4]
+            self.board[move_to_vanish.row][move_to_vanish.col] = CellValue.EMPTY
+            print(f"🔄 Vanishing: {symbol.value} at [{move_to_vanish.row}, {move_to_vanish.col}]")
     
     def _switch_turn(self) -> None:
         """Switch to the other player's turn"""
@@ -216,17 +218,16 @@ class Game:
         if symbol is None:
             return None
         
-        # Get all moves by this player that are still on board
-        player_moves_on_board = [
+        # Get all moves by this player
+        player_moves = [
             move for move in self.moves
-            if move.player_id == player_id and 
-            self.board[move.row][move.col] == symbol
+            if move.player_id == player_id
         ]
         
-        # If player has 3 symbols, next move will vanish the oldest
-        if len(player_moves_on_board) >= 3:
-            oldest_move = player_moves_on_board[0]
-            return (oldest_move.row, oldest_move.col)
+        # If player has 3 or more symbols, next move will vanish the oldest active one
+        if len(player_moves) >= 3:
+            oldest_active_move = player_moves[-3]
+            return (oldest_active_move.row, oldest_active_move.col)
         
         return None
     
